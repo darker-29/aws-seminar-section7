@@ -1,0 +1,35 @@
+version: 0.2
+
+env:
+  variables:
+    DOCKER_BUILDKIT: "1"
+
+phases:
+  install:
+    runtime-versions:
+      php: 8.1
+      nodejs: 16
+
+  pre_build:
+    commands:
+      - composer install
+      - npm install
+
+  build:
+    commands:
+      - npm run build
+
+  post_build:
+    commands:
+      - cat .env.example | sed
+        -e "s/#DB_HOST#/${DB_HOST}/"
+        -e "s/#DB_PORT#/${DB_PORT}/"
+        -e "s/#DB_DATABASE#/${DB_DATABASE}/"
+        -e "s/#DB_USERNAME#/${DB_USERNAME}/"
+        -e "s/#DB_PASSWORD#/${DB_PASSWORD}/" > .env
+      - php artisan key:generate
+      - php artisan adminlte:install --only=auth_views --force
+
+artifacts:
+  files:
+    - '**/*'
